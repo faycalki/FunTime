@@ -1,0 +1,148 @@
+@startuml
+skinparam style strictuml
+skinparam genericDisplay old
+
+class GameBoardController {
+  -view: BoardView
+  -board: Board
+}
+
+class GameBoard {
+  -dreamTilesArray: DreamTile[11]
+  -cardDeck: Deck
+  -dreamTileDeck: Deck
+  -SIZE: int
+}
+
+class ScoreBoard {
+  -SIZE: int
+}
+
+class CardDeck {
+  -numberOfPlayers: int
+  +chooseCards(int): void
+}
+
+class DreamTileDeck {
+  +revealMarket(): void
+  -marketArray: DreamTile[4]
+}
+
+class CardView {
+  -controller: CardController
+}
+
+class CardController {
+  -view: CardView
+  -card: ICard
+}
+
+class NightmareCard {
+  -jump: boolean
+  -walk: boolean
+  -scareAdjacent: boolean
+  -moveToWebToken: boolean
+}
+
+class ZzzToken {
+  -infinite: boolean
+  -player: IPlayer
+}
+
+interface ISheepToken {
+}
+
+interface INightmareToken {
+}
+
+interface IWinkToken {
+}
+
+interface IPlayer {
+}
+
+interface IWebToken {
+}
+
+GameBoard --> GameBoardController
+GameBoardController --> CardController
+
+CardView --> CardController
+CardController --> Card
+
+NightmareCard --|> INightmareToken
+
+ZzzToken --|> ISheepToken
+ZzzToken --|> INightmareToken
+
+IWinkToken --|> IWebToken
+
+GameBoard --> ScoreBoard
+GameBoard --> CardDeck
+GameBoard --> DreamTileDeck
+
+interface IFirstSheep {
+  + getCurrentTurn(): IPlayer
+  + getTurnSequence(): ArrayList<IPlayer>
+  + declareFirstSheep(): void
+}
+
+abstract class Deck {
+  - deck: Stack
+  + createDeck(): void
+}
+
+abstract class Token  {
+  - position: int
+  + setPosition(int): void
+  + getPosition(): int
+}
+
+abstract class Card  {
+  + description: String
+}
+
+abstract class Phase<<Abstract>> {
+  - isPhaseOver(): boolean
+  - players: ArrayList<Player>
+  - deck: Deck
+  - gameController: GameController
+  - nightmareReferenceCard: NightmareReferenceCard
+  + takeAction(IPlayer): void
+}
+
+interface IWebToken {
+}
+
+abstract class NightmarReferenceCard {
+  - nightmareToken: NightmareToken
+  + InitializeToken(): void
+}
+
+class SheepCard {
+  - minimumPlayersRequired: int
+  - winks: int
+  - movableDistance: int
+  - canMoveAndCatch: boolean
+  - canMoveAndGain: boolean
+}
+
+interface IDreamTile<T><<Interface>> {
+
+}
+
+IDreamTile --|> IPlayer
+IWebToken --|> IFirstSheep
+Deck --|> AbstractDeck
+Token --|> IWebToken
+Card --|> IWebToken
+NightmarReferenceCard --|> AbstractCard
+SheepCard --|> Card
+
+interface View<<Interface>> {
+  + display(): void
+  + requestUpdate(): void
+  + input(): void
+}
+
+@enduml
