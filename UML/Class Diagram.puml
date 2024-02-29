@@ -44,7 +44,7 @@ class GameController{
 'IChoose<T> maybe useful'
 'IPlayer, Phase, Deck, Rulebook'
 'IPlayer is created by First Sheep Controller. Phase knows IFirstSheep (and is created by IFirstSheep), and Phase knows NightmareReferenceCard'
-
+'Possibilities: Player shows "you are out", Phase shows current phase, Deck shows Deck, and Rulebook just shows the rule'
 class FirstSheepController {
     -firstSheepView: Viewable
     -firstSheep: FirstSheep
@@ -294,7 +294,6 @@ interface Stuckable <<Interface>>{
     +swapStuck(): void
 }
 
-class NightmareToken implements IScare
 
 interface IPlayer<<Interface>> {
     +initializeTokens():void
@@ -334,6 +333,7 @@ class Hand implements IHand {
 
 
 interface IFirstSheep<<Interface>> {
+  + incrementTurn(): void
   + getCurrentTurn(): IPlayer
   + getTurnSequence(): ArrayList<IPlayer>
   + declareFirstSheep(): void
@@ -343,20 +343,26 @@ interface IFirstSheep<<Interface>> {
 class FirstSheep implements IFirstSheep {
     -currentFirstSheep: IPlayer
     -player:ArrayList<IPlayer>
+    + FirstSheep(int): void
 }
+'NOTE: Number of players is passed to FirstSheep(int)'
 
 
 
 'TODO: Look into this'
-abstract class Phase<<Abstract>> implements Switchable{
-  - isPhaseOver(): boolean
+abstract class Phase<<Abstract>> {
   - players: ArrayList<Player>
   - deck: Deck
   - gameController: GameController
   - nightmareReferenceCard: NightmareReferenceCard
+  - firstSheep: FirstSheep
+  - Switchable: switchable
   + takeAction(IPlayer): void
-
+  - isPhaseOver(): boolean
+  - switch(Switchable): void
 }
+'Everytime right after takeAction is performed, call firstSheep's incrementTurn. SIDE CASE to figure out: Double Dutch'
+'In order to figure out isOut, we can have a iteration that occurs every time takeAction(IPlayer) is executed (as a block of code after that) which adds the values of the player's IsOut, if they are equal to the size of the array of Players, then every player is out.'
 
 interface Switchable<<Interface>> {
     switch(): void
@@ -370,11 +376,11 @@ class RacingPhase extends Phase{
     -fence: IFence
     -refereneTile: IReferenceTile
     -resetable: Resetable
-    +enforceFullHand(IPlayer):void
+    + enforceFullHand(IPlayer):void
+    + reset(): void
 }
 
 class RestingPhase extends Phase {
-    -firstSheep: FirstSheep
     +initializeMarket():void
     +updateMarket():void
     +placeTileOrCatch(IPlayer):void
@@ -387,7 +393,7 @@ interface IResetable<<Interface>> {
     +reset(IPlayer, NightmareReferenceCard, cardDeck): void
 }
 
-class Resetable implements IResetAble {
+class Resetable implements IResetable {
 
 }
 
@@ -443,7 +449,7 @@ ScoreBoardView "1"-"1" ScoreBoardController
 CardView "1"-"1" CardController
 
 'TODO: Look into this'
-CardController "1"-"0..*" Card
+CardController "1"-"0..* " Card
 
 
 SheepCard "1"-"1" CardController
@@ -471,7 +477,7 @@ RacingPhase "1"--|>"1" IReferenceTile
 RacingPhase --|> IResetable
 
 Main -> IGameController
-GameView "1..*" --> "6..*" Viewable
+GameView "1..* " --> "6..* " Viewable
 GameView "1"-"1" IGameController
 Rulebook "1" - "1" IGameController
 Phase "2"-"1" IGameController
@@ -494,7 +500,7 @@ ReferenceTile --|>"1..4" IPlayer
 NightmareToken --|> IFence
 WinkToken --|> IPillowToken
 IDreamTile "1"--|>"0..40" IZzzToken
-DreamTileDeck "1"--|>"0..*" IDreamTile
+DreamTileDeck "1"--|>"0..* " IDreamTile
 Phase --|> IResetable:use
 
 
@@ -503,7 +509,7 @@ SinisterSpider --|> IWebToken
 Phase --|> Deck
 GameBoard --|> Deck
 
-CardDeck "1"--|>"0..*" Card
+CardDeck "1"--|>"0..* " Card
 
 
 Player --|> GameBoard
