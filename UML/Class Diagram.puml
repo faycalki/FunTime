@@ -200,7 +200,7 @@ interface IDreamTile<T><<Interface>> {
     +activateTile(IPlayer):void
 }
 
-class DreamTile implements IDreamTile, IScare{
+class DreamTile implements IDreamTile{
     - description: String
     - initialZzzsRequired:int
     -tokens:ArrayList<ZzzToken>
@@ -460,7 +460,7 @@ Player --|> IActionable: use
 NightmareReferenceCard --|> IActionable:use
 
 Hand --|> Card
-Player --|> IHand
+
 
 FirstSheep "1" - "1" FirstSheepController
 FirstSheepView "1" - "1" FirstSheepController
@@ -495,7 +495,6 @@ NightmareToken --|> IFence
 WinkToken --|> IPillowToken
 IDreamTile "1"--|>"0..40" IZzzToken
 DreamTileDeck "1"--|>"0..*" IDreamTile
-CardDeck "1"--|>"0..*" Card
 Phase --|> IResetable:use
 
 
@@ -504,17 +503,13 @@ SinisterSpider --|> IWebToken
 Phase --|> Deck
 GameBoard --|> Deck
 
-Hand --|> Card
 CardDeck "1"--|>"0..*" Card
-NightmareReferenceCard --|> Card: use
+
 
 Player --|> GameBoard
 GameBoard --|> IDreamTile
 IWebToken --|> Stuckable:use
 SheepToken --|> IFence
-
-
-IPlayer "1"<|--|>"10" IZzzToken
 
 NightmareToken --|>"1" IScare
 DreamTile --|>"1" IScare
