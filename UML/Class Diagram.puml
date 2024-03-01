@@ -41,8 +41,7 @@ class GameController{
     - generateRestOfModel(): void
 }
 'TODO: Figure out where to initialize those 4 classes (probably not in the IGameController as we can't pass Model objects through the Controllers)'
-'IChoose<T> maybe useful'
-'IPlayer, Phase, Deck, Rulebook'
+'Phase, Deck, Rulebook'
 'IPlayer is created by First Sheep Controller. Phase knows IFirstSheep (and is created by IFirstSheep), and Phase knows NightmareReferenceCard'
 'Possibilities: Player shows "you are out", Phase shows current phase, Deck shows Deck, and Rulebook just shows the rule'
 class FirstSheepController {
@@ -85,7 +84,7 @@ class FirstSheepView {
 }
 
 class GameView{
-    + views: ArrayList<view>
+    + views: ArrayList<Viewable>
 }
 
 class NightmareReferenceCardView implements Viewable
@@ -483,8 +482,8 @@ Rulebook "1" - "1" IGameController
 Phase "2"-"1" IGameController
 Phase --|> IPlayer: use
 
-IPlayer "1..4"-"1" IGameController
-IFirstSheep "1"-"1" IGameController
+IPlayer "1..4"<|-- FirstSheep
+IFirstSheep "1"-"1" FirstSheepController
 Deck "2"-"1" IGameController
 NightmareReferenceCardController "1"-"1" GameBoardController
 NightmareReferenceCardController "1"-"1" IWebToken
@@ -501,7 +500,7 @@ NightmareToken --|> IFence
 WinkToken --|> IPillowToken
 IDreamTile "1"--|>"0..40" IZzzToken
 DreamTileDeck "1"--|>"0..* " IDreamTile
-Phase --|> IResetable:use
+Phase --|> IResetable
 
 
 Phase --|> NightmareReferenceCard
@@ -526,7 +525,8 @@ Deck --|> DrawFromDeck
 
 
 'TODO: Switchable connection'
-Phase --|> SwitchPhase
+Phase --|> Switchable
+
 
 
 
