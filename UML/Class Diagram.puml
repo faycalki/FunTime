@@ -13,30 +13,33 @@ package "Controller Module"  {
 class GameBoardController {
   -gameBoardView: Viewable
   -board: GameBoard
+  -gameController: IGameController
 }
 
 class ScoreBoardController {
     -scoreBoardView Viewable
     -board: ScoreBoard
+    -gameController: IGameController
 }
 
 class CardController {
     -cardView: Viewable
     -card: Card
+    -gameController: IGameController
 }
 
 
 class NightmareReferenceCardController {
     -referenceCard: NightmareReferenceCard
     -nightmarReferenceCardView: Viewable
+    -gameController: IGameController
 }
 
-class GameController{
+class GameController implements IGameController{
     - firstSheep: IFirstSheep
     - Scanner: scanner
     - gameView: Viewable
     - controllers: ArrayList<Object>
-
     - generateControllers(): void
     - generateRestOfModel(): void
 }
@@ -47,12 +50,13 @@ class GameController{
 class FirstSheepController {
     -firstSheepView: Viewable
     -firstSheep: FirstSheep
+    -gameController: IGameController
 }
 interface IGameController<<Interface>>{
     + initializeGame(): void
-    + updateGameView(): void
+    + displayGameView(): void
+    + addViewToGameView(View): void
 }
-class GameController implements IGameController
 
 }
 
