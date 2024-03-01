@@ -8,58 +8,6 @@ skinparam linetype ortho
 hide empty members
 
 
-'Controller package'
-package "Controller Module"  {
-class GameBoardController {
-  -gameBoardView: Viewable
-  -board: GameBoard
-  -gameController: IGameController
-}
-
-class ScoreBoardController {
-    -scoreBoardView Viewable
-    -board: ScoreBoard
-    -gameController: IGameController
-}
-
-class CardController {
-    -cardView: Viewable
-    -card: Card
-    -gameController: IGameController
-}
-
-
-class NightmareReferenceCardController {
-    -referenceCard: NightmareReferenceCard
-    -nightmarReferenceCardView: Viewable
-    -gameController: IGameController
-}
-
-class GameController implements IGameController{
-    - firstSheep: IFirstSheep
-    - Scanner: scanner
-    - gameView: Viewable
-    - controllers: ArrayList<Object>
-    - generateControllers(): void
-    - generateRestOfModel(): void
-}
-'TODO: Figure out where to initialize those 4 classes (probably not in the IGameController as we can't pass Model objects through the Controllers)'
-'Phase, Deck, Rulebook'
-'IPlayer is created by First Sheep Controller. Phase knows IFirstSheep (and is created by IFirstSheep), and Phase knows NightmareReferenceCard'
-'Possibilities: Player shows "you are out", Phase shows current phase, Deck shows Deck, and Rulebook just shows the rule'
-class FirstSheepController {
-    -firstSheepView: Viewable
-    -firstSheep: FirstSheep
-    -gameController: IGameController
-}
-interface IGameController<<Interface>>{
-    + initializeGame(): void
-    + displayGameView(): void
-    + addViewToGameView(View): void
-}
-
-}
-
 
 'View package'
 package "View Module"  {
@@ -73,6 +21,7 @@ interface Viewable<<Interface>> {
     + requestUpdate(): void
     + input(): void
 }
+
 class NightmareReferenceCardView {
     -controller: NightmareReferenceCardController
 }
@@ -89,6 +38,8 @@ class FirstSheepView {
 
 class GameView{
     + views: ArrayList<Viewable>
+    - Scanner: scanner
+    + displayRuleBook(String): void
 }
 
 class NightmareReferenceCardView implements Viewable
@@ -101,7 +52,67 @@ class FirstSheepView implements Viewable
 }
 
 
+'Controller package'
+package "Controller Module"  {
+class GameBoardController {
+  -gameBoardView: Viewable
+  -board: GameBoard
+  -gameController: IGameController
+}
 
+class ScoreBoardController {
+    -scoreBoardView Viewable
+    -board: ScoreBoard
+    -gameController: IGameController
+    -referenceTile: ReferenceTile
+    + passReferenceTile(): ReferenceTile
+}
+
+class CardController {
+    -cardView: Viewable
+    -card: Card
+    -gameController: IGameController
+}
+
+class NightmareReferenceCardController {
+    -referenceCard: NightmareReferenceCard
+    -nightmarReferenceCardView: Viewable
+    -gameController: IGameController
+    + passNightmareReferenceCard(): NightmareReferenceCard
+}
+
+class GameController implements IGameController{
+    - gameView: Viewable
+    - rulebook: Rulebook
+    - phase: Phase[2]
+    - deck: Deck[2]
+    - controllers: ArrayList<Object>
+    - generateControllers(): void
+    - generateRestOfModel(): void
+    + passRuleBook(): String
+
+}
+'IPlayer is created by First Sheep. Phase knows IFirstSheep (and is created by IFirstSheep), and Phase knows NightmareReferenceCard'
+'Possibilities: Player shows "you are out", Phase shows current phase, Deck shows Deck, and Rulebook just shows the rule'
+
+'TODO: passFirstSheep breaks MVC. Find an alternative path. The way this works is it passes the First Sheep during creation of this controller back to GameController'
+'TODO: Figure out how NightmareReferenceCard will pass to GameController -- we can do it the same way as FirstSheep. We just need to pass it to Phase'
+class FirstSheepController {
+    - firstSheepView: Viewable
+    - firstSheep: FirstSheep
+    - gameController: IGameController
+    + FirstSheepController(int, int): void
+    + passFirstSheep(): FirstSheep
+}
+
+interface IGameController<<Interface>>{
+    + initializeGame(): void
+    + displayGameView(): void
+    + displayRuleBook(): void
+    + addViewToGameView(View): void
+}
+
+}
 
 
 
@@ -122,7 +133,6 @@ class ScoreBoard {
 
 
 
-'TODO: Change this'
 abstract class Deck<T><<Abstract>> {
   - deck: ArrayList<T>
   - draw: DrawFromDeck
@@ -178,6 +188,7 @@ class NightmareReferenceCard extends Card
 abstract class NightmareReferenceCard {
     -nightmareToken:NightmareToken
     + InitializeToken(): void
+
 }
 
 
@@ -346,13 +357,12 @@ interface IFirstSheep<<Interface>> {
 class FirstSheep implements IFirstSheep {
     -currentFirstSheep: IPlayer
     -player:ArrayList<IPlayer>
-    + FirstSheep(int): void
+    + FirstSheep(int, int): void
 }
-'NOTE: Number of players is passed to FirstSheep(int)'
+'NOTE: Number of players is passed to FirstSheep(int, int) with second int being the number of hours slept last night'
 
 
 
-'TODO: Look into this'
 abstract class Phase<<Abstract>> {
   - players: ArrayList<Player>
   - deck: Deck
@@ -402,8 +412,7 @@ class Resetable implements IResetable {
 
 
 class Main{
-    -gameController: IGameController
-    main(): void
+    + main(): void
 }
 
 
@@ -451,7 +460,6 @@ ScoreBoardView "1"-"1" ScoreBoardController
 
 CardView "1"-"1" CardController
 
-'TODO: Look into this'
 CardController "1"-"0..* " Card
 
 
@@ -474,21 +482,22 @@ Hand --|> Card
 FirstSheep "1" - "1" FirstSheepController
 FirstSheepView "1" - "1" FirstSheepController
 
-RestingPhase --|> IFirstSheep
+Phase "1.."<|--|>"1.." IFirstSheep
 RacingPhase <|--|> IFence
 RacingPhase "1"--|>"1" IReferenceTile
 RacingPhase --|> IResetable
 
-Main -> IGameController
-GameView "1..* " --> "6..* " Viewable
+Main -> IGameController: use
+GameView "1..* " --> "5..* " Viewable
 GameView "1"-"1" IGameController
 Rulebook "1" - "1" IGameController
 Phase "2"-"1" IGameController
+Deck "2"-"1" IGameController
+
 Phase --|> IPlayer: use
 
 IPlayer "1..4"<|-- FirstSheep
 IFirstSheep "1"-"1" FirstSheepController
-Deck "2"-"1" IGameController
 NightmareReferenceCardController "1"-"1" GameBoardController
 NightmareReferenceCardController "1"-"1" IWebToken
 Player --|> NightmareReferenceCard: use
@@ -528,8 +537,14 @@ Player --|> IHand: use
 Deck --|> DrawFromDeck
 
 
-'TODO: Switchable connection'
 Phase --|> Switchable
+IGameController "1"<|--|>"1" GameBoardController
+IGameController "1"<|--|>"1" ScoreBoardController
+IGameController "1"<|--|>"1" FirstSheepController
+IGameController "1"<|--|>"1" NightmareReferenceCardController
+IGameController "1"<|--|>"1" CardController
+
+
 
 
 
