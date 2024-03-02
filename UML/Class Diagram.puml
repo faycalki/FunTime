@@ -387,7 +387,7 @@ class NightmareToken extends Token
 class WinkToken extends Token
 class WebToken extends Token
 
-interface Scarable <<Interface>> {
+interface Scareable <<Interface>> {
     +incrementScare(): void
     +decrementScare(): void
     +resetScare(): void
