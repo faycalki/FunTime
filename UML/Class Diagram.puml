@@ -11,15 +11,16 @@ hide empty members
 
 'View package'
 package "View Module"  {
-class GameBoardView {
-    -controller: GameBoardController
-    -board: GameBoard
-}
+
 
 interface Viewable<<Interface>> {
     + display(): void
-    + requestUpdate(): void
-    + input(): void
+    + inputFromController(String): void
+    + userInput(): void
+}
+
+class GameBoardView {
+    -controller: GameBoardController
 }
 
 class NightmareReferenceCardView {
@@ -56,41 +57,57 @@ class FirstSheepView implements Viewable
 package "Controller Module"  {
 class GameBoardController {
   -gameBoardView: Viewable
-  -board: GameBoard
+  -board: IGameBoard
   -gameController: IGameController
+  + updateView(): void
+  - parseModel(): String
+  - displayView(): void
 }
 
 class ScoreBoardController {
     -scoreBoardView Viewable
-    -board: ScoreBoard
+    -board: IScoreBoard
     -gameController: IGameController
     -referenceTile: ReferenceTile
-    + passReferenceTile(): ReferenceTile
+    + updateView(): void
+    - parseModel(): String
+    - displayView(): void
 }
 
 class CardController {
     -cardView: Viewable
     -card: Card
     -gameController: IGameController
+    + updateView(): void
+    - parseModel(): String
+    - displayView(): void
 }
 
 class NightmareReferenceCardController {
     -referenceCard: NightmareReferenceCard
-    -nightmarReferenceCardView: Viewable
+    -nightmareReferenceCardView: Viewable
     -gameController: IGameController
-    + passNightmareReferenceCard(): NightmareReferenceCard
+    + updateView(): void
+    - parseModel(): String
+    - displayView(): void
+}
+
+interface IGameController<<Interface>>{
+    + initializeGame(): void
+    + displayGameView(): void
+    + displayRuleBook(): void
+    + addViewToGameView(View): void
 }
 
 class GameController implements IGameController{
     - gameView: Viewable
-    - rulebook: Rulebook
+    - controllers: ArrayList<Object>
+    - gameInformation: GameInformation
+    - rulebook: IRuleBook
+    + displayRuleBook(): String
+    - generateControllers(): void
     - phase: Phase[2]
     - deck: Deck[2]
-    - controllers: ArrayList<Object>
-    - generateControllers(): void
-    - generateRestOfModel(): void
-    + passRuleBook(): String
-
 }
 'IPlayer is created by First Sheep. Phase knows IFirstSheep (and is created by IFirstSheep), and Phase knows NightmareReferenceCard'
 'Possibilities: Player shows "you are out", Phase shows current phase, Deck shows Deck, and Rulebook just shows the rule'
@@ -102,40 +119,64 @@ class FirstSheepController {
     - firstSheep: FirstSheep
     - gameController: IGameController
     + FirstSheepController(int, int): void
-    + passFirstSheep(): FirstSheep
-}
-
-interface IGameController<<Interface>>{
-    + initializeGame(): void
-    + displayGameView(): void
-    + displayRuleBook(): void
-    + addViewToGameView(View): void
+    + updateView(): void
+    - parseModel(): String
+    - displayView(): void
 }
 
 }
-
-
-
 package "Model Module"{
-GameBoard "1"-"1" GameBoardController
 
-class GameBoard {
-  -dreamTilesArray: DreamTile[11]
+interface IGameInformation{
+      + generateModel(): void
+      + getGameBoard(): IGameBoard
+      + getScoreBoard(): IScoreBoard
+      + getReferenceTile(): ReferenceTile
+      + getFirstSheep(): FirstSheep
+      + getNightmareReferenceCard(): NightmareReferenceCard
+      + getRuleBook(): Rulebook
+      + getPhases(): Phase[2]
+      + getDecks(): Deck[2]
+}
+
+class GameInformation implements IGameInformation{
+    - gameController: GameController
+    - gameBoard: IGameBoard
+    - scoreBoard: IScoreBoard
+    - referenceTile: ReferenceTile
+    - firstSheep: FirstSheep
+    - referenceCard: NightmareReferenceCard
+    - rulebook: IRuleBook
+    - phase: Phase[2]
+    - deck: Deck[2]
+}
+
+
+interface IGameBoard{
+    + updateController(): void
+    + getBoard(): ArrayList<Token>[]
+}
+
+class GameBoard implements IGameBoard{
+  -SIZE: int
+  -dreamTilesArray: DreamTile[SIZE]
   -cardDeck: Deck
   -dreamTileDeck: Deck
-  -SIZE: int
+  - boardArray: ArrayList<Token>[SIZE]
 }
 
-
-class ScoreBoard {
-  -SIZE: int
+interface IScoreBoard{
+    + updateController(): void
+    + getBoard(): ArrayList<Token>[]
 }
 
-
+class ScoreBoard implements IScoreBoard{
+  -SIZE: int
+  - boardArray: ArrayList<Token>[SIZE]
+}
 
 abstract class Deck<T><<Abstract>> {
   - deck: ArrayList<T>
-  - draw: DrawFromDeck
   + createDeck(): void
 }
 
@@ -143,13 +184,19 @@ interface Drawable<T><<Interface>>{
     + draw(Deck): T
 }
 
+'NOTE: there will be two of this object. One for the DreamTile drawing from the market and one for the card drawing from the Card Deck, with different values for the instance variable'
 class DrawFromDeck<T> implements Drawable{
+    - deck: Deck<T>
     - rand: Random
 }
 
+'SheepCardsList is gonna be of size 4, nightmareCardsList is gonna be of size 3'
 class CardDeck<T> {
-  -numberOfPlayers: int
-  +chooseCards(int): void
+  - numberOfPlayers: int
+  - sheepCardsList: ArrayList<ArrayList<Card>>
+  - nightmareCardsList: ArrayList<ArrayList<Card>>
+  + chooseSheepCards(int): void
+  + chooseNightmareCards(NightmareReferenceCard): void
 }
 
 class DreamTileDeck<T> {
@@ -160,17 +207,47 @@ class DreamTileDeck<T> {
 class CardDeck extends Deck
 class DreamTileDeck extends Deck
 
+
+interface ICardBuilder{
+    + build():
+    + withMovableDistance(int): ICardBuilder
+    + withWinks(int): ICardBuilder
+    + withCatchableZzz(int): ICardBuilder
+    + withScareAdjacent(int): ICardBuilder
+    + withMoveToWebToken(int): ICardBuilder
+    + withJump(int): ICardBuilder
+    + withDescription(String): ICardBuilder
+}
+
+class CardBuilder implements ICardBuilder{
+    - card: Card
+    - movableDistance: int
+    - winks: int
+    - catchableZzz: int
+    - scareAdjacent: boolean
+    - moveToWebToken: boolean
+    - jump: boolean
+    - description: String
+}
+
+
+
 abstract class Card<T><<Abstract>>  {
-  + description: String
+  - description: String
+  + getDescription(): Card
+  # Card(): void
 }
 
 
 class SheepCard {
   - minimumPlayersRequired: int
-  - winks: int
   - movableDistance: int
-  - canMoveAndCatch: boolean
-  - canMoveAndGain: boolean
+  - winks: int
+  - catchableZzz: int
+  + getMinimumPlayersRequired(): int
+  + getWinks(): int
+  + getMovableDistance():int
+  + getCatchableZzz(): int
 }
 
 class NightmareCard {
@@ -178,6 +255,11 @@ class NightmareCard {
   -walk: boolean
   -scareAdjacent: boolean
   -moveToWebToken: boolean
+  + getJump(): boolean
+  + getWalk(): boolean
+  + getScareAdjacent(): boolean
+  + getMoveToWebToken(): boolean
+
 }
 
 class SheepCard extends Card
@@ -186,9 +268,8 @@ class NightmareReferenceCard extends Card
 
 
 abstract class NightmareReferenceCard {
-    -nightmareToken:NightmareToken
+    - nightmareToken: NightmareToken
     + InitializeToken(): void
-
 }
 
 
@@ -209,15 +290,27 @@ class NightmareWolf extends NightmareReferenceCard
 class SinisterSpider extends NightmareReferenceCard
 class BumpInTheNight extends NightmareReferenceCard
 
+interface IDreamTileBuilder{
+    build();
+    withInitialZzzsRequired(int): IDreamTileBuilder
+    withTokens(ArrayList<IZzzToken>): IDreamTileBuilder
+}
+
+class DreamTileBuilder implements IDreamTileBuilder{
+    -dreamTile: IDreamTile
+    -initialZzzsRequired: int
+    -tokens: ArrayList<IZzzToken>
+}
 
 interface IDreamTile<T><<Interface>> {
-    +activateTile(IPlayer):void
+    + activateTile(IPlayer):void
 }
 
 class DreamTile implements IDreamTile{
     - description: String
-    - initialZzzsRequired:int
-    -tokens:ArrayList<ZzzToken>
+    - initialZzzsRequired: int
+    - tokens: ArrayList<ZzzToken>
+    # DreamTile(): void
 }
 
 
@@ -229,7 +322,9 @@ abstract class Token<<Abstract>>  {
 
 interface IZzzToken<<Interface>> {
     +setPlayer(IPlayer):void
-    +getPlayer(IPlayer):void
+    +getPlayer(): IPlayer
+    + getInfinite(): boolean
+
 }
 
 class ZzzToken implements IZzzToken {
@@ -238,6 +333,10 @@ class ZzzToken implements IZzzToken {
 }
 
 interface ISheepToken <<Interface>> {
+  + getPlayer(): IPlayer
+  + getScares(): int
+  + getIsStuck(): boolean
+  + getIsActive(): boolean
 }
 
 class SheepToken extends Token implements ISheepToken, Scareable, Stuckable {
@@ -251,7 +350,7 @@ class SheepToken extends Token implements ISheepToken, Scareable, Stuckable {
 interface INightmareToken <<Interface>>{
 }
 
-class NightmareToken implements INightmareToken{
+class NightmareToken extends Token implements INightmareToken{
     -fence: IFence
 }
 
@@ -265,7 +364,7 @@ class PillowToken implements IPillowToken{
 }
 
 interface IWinkToken <<Interface>> {
-    +hasSurpassed():boolean
+    +hasSurpassed(): boolean
     +setPlayer(IPlayer):void
     +getPlayer():IPlayer
 }
@@ -276,7 +375,7 @@ class WinkToken  implements IWinkToken{
 }
 
 interface IWebToken <<Interface>> {
-    +capture(Stuckable):void
+    + capture(Stuckable): void
 }
 
 class WebToken implements IWebToken{
@@ -287,9 +386,6 @@ class PillowToken extends Token
 class NightmareToken extends Token
 class WinkToken extends Token
 class WebToken extends Token
-
-
-
 
 interface Scarable <<Interface>> {
     +incrementScare(): void
@@ -310,7 +406,13 @@ interface Stuckable <<Interface>>{
 
 
 interface IPlayer<<Interface>> {
-    +initializeTokens():void
+    + initializeTokens(): void
+    +addCard(Card): void
+    +getNumCards(): int
+    +resolve(): (T, T)
+    + getWinks(): int
+    + getIsOut(): boolean
+    + getZzzTokens(): ArrayList<IZzzToken>
 }
 
 class Player implements IPlayer {
@@ -321,27 +423,16 @@ class Player implements IPlayer {
     - sheepToken: ISheepToken
     - winkToken: IWinkToken
     - pillowToken: IPillowToken
+    - actionable: IActionable
+    - drawableCards: Drawable<Card>
+    - drawableTiles: Drawable<IDreamTile>
+    - cards: Card[2]
 }
-
 
 interface IActionable <<Interface>> {
     +actionOnToken(T, Token):void
 }
 class Actionable  implements IActionable{
-
-}
-
-
-
-interface IHand<<Interface>> {
-    +addCard(Card):void
-    +getNumCards():int
-    +resolveCard():String, T
-}
-
-class Hand implements IHand {
-    -cardDeck: CardDeck
-    -cards: ICard[2]
 }
 
 
@@ -403,7 +494,7 @@ class RestingPhase extends Phase {
 
 
 interface IResetable<<Interface>> {
-    +reset(IPlayer, NightmareReferenceCard, cardDeck): void
+    +reset(ArrayList<IPlayer>, NightmareReferenceCard, cardDeck): void
 }
 
 class Resetable implements IResetable {
@@ -418,15 +509,14 @@ class Main{
 
 
 
-
-class Rulebook {
+interface IRuleBook {
     + getRules(): String
     + setRules(String): void
 }
 
-
-
-
+class Rulebook implements IRuleBook {
+    -rules: String
+}
 
 interface IFence<<Interface>> {
     + passedThrough(Token):void
@@ -443,6 +533,7 @@ class Fence implements IFence {
 interface IReferenceTile<<Interface>> {
     + movePillow(Player): void
     - calculateDistanceToPillow(Token, Token): void
+    + getNumPlayers(): int
 }
 
 class ReferenceTile implements IReferenceTile {
@@ -476,7 +567,7 @@ NightmareReferenceCard --|> INightmareToken
 Player --|> IActionable: use
 NightmareReferenceCard --|> IActionable:use
 
-Hand --|> Card
+Player --|> Card
 
 
 FirstSheep "1" - "1" FirstSheepController
@@ -490,7 +581,7 @@ RacingPhase --|> IResetable
 Main -> IGameController: use
 GameView "1..* " --> "5..* " Viewable
 GameView "1"-"1" IGameController
-Rulebook "1" - "1" IGameController
+IRuleBook "1" - "1" IGameController
 Phase "2"-"1" IGameController
 Deck "2"-"1" IGameController
 
@@ -524,7 +615,7 @@ GameBoard --|> Deck
 CardDeck "1"--|>"0..* " Card
 
 
-Player --|> GameBoard
+Player --|> IGameBoard
 GameBoard --|> IDreamTile
 IWebToken --|> Stuckable:use
 SheepToken --|> IFence
@@ -532,9 +623,8 @@ SheepToken --|> IFence
 NightmareToken --|>"1" IScare
 DreamTile --|>"1" IScare
 
-Player --|> IHand: use
 
-Deck --|> DrawFromDeck
+Player --|>"2" Drawable
 
 
 Phase --|> Switchable
@@ -544,11 +634,24 @@ IGameController "1"<|--|>"1" FirstSheepController
 IGameController "1"<|--|>"1" NightmareReferenceCardController
 IGameController "1"<|--|>"1" CardController
 
+IGameController "1"<|--|>"1" IGameInformation
 
 
+GameInformation --|>"1" IRuleBook
+GameInformation --|>"1" IGameBoard
+GameInformation --|>"1" IScoreBoard
+GameInformation --|>"1" IReferenceTile
+GameInformation --|>"1" NightmareReferenceCard
+GameInformation --|>"2" Phase
+GameInformation --|>"2" Deck
+GameInformation --|>"1" IFirstSheep
+Player --|>"2" CardController
+GameBoard "1"-"1" GameBoardController
 
-
-
+CardBuilder --|> Card
+CardBuilder --|> ICardBuilder:use
+DreamTileBuilder --|> Card
+DreamTileBuilder --|> IDreamTileBuilder:use
 }
 
 
