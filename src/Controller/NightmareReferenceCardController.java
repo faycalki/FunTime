@@ -1,11 +1,11 @@
 package Controller;
 
-import Model.Card;
 import View.Viewable;
+import Model.NightmareReferenceCard;
 
-public class CardController {
-    private Viewable cardView;
-    private Card card;
+public class NightmareReferenceCardController {
+    private NightmareReferenceCard referenceCard;
+    private Viewable nightmareReferenceCardView;
     private IGameController gameController;
 
     public void updateView() {}

@@ -1,11 +1,11 @@
 package Controller;
 
-import Model.Card;
 import View.Viewable;
+import Model.IGameBoard;
 
-public class CardController {
-    private Viewable cardView;
-    private Card card;
+public class GameBoardController {
+    private Viewable gameBoardView;
+    private IGameBoard board;
     private IGameController gameController;
 
     public void updateView() {}
