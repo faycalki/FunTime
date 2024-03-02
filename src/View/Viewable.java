@@ -1,4 +1,8 @@
+
 package View;
 
-public class Viewable {
+public interface Viewable {
+    void display();
+    void inputFromController(String input);
+    void userInput();
 }
